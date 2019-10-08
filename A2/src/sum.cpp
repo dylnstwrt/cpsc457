@@ -18,10 +18,13 @@
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
+#include <thread>
 
 using namespace std;
 
-const int BUFFER_SIZE = 256;
+long threadSum = 0;
+
+const int BUFFER_SIZE = 512;
 const int MAX_INT_COUNT = 1000000;
 
 int main(int argc, char *argv[]) {
@@ -30,26 +33,20 @@ int main(int argc, char *argv[]) {
         cout << "Usage: <input file> <# of threads>" << endl;
         exit(EXIT_FAILURE);
     }
+    
+    fstream read;
+    read.open(argv[1], ios::in);
 
     int lineCount = 0;
-    int toAdd;
 
-    ifstream stream;
-    stream.open(argv[1]);
+    int integers[MAX_INT_COUNT];
 
-
-    char integer[BUFFER_SIZE];
-    int array[MAX_INT_COUNT];
-
-      while (!stream.eof()) {
-          memset(integer, 0, 256);
-          stream.getline(integer, 256);
-          toAdd = atoi(integer);
-          array[lineCount] = toAdd;
-          lineCount = lineCount + 1; 
-      }
-    stream.close();
-
+    string str;
+    while (getline(read, str)) {
+        integers[lineCount] = atoi(str.c_str());
+        //cout << integers[lineCount] << endl;
+        lineCount++;
+    }
     
     return EXIT_SUCCESS;
 }
