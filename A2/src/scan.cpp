@@ -16,18 +16,28 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <algorithm>
+
 
 #define MAX_FNAME_SIZE 512
 #define MAX_FILES 1024
 
-int main( int argc, char ** argv) {
+bool compareSize( char array1[MAX_FNAME_SIZE], char array2[MAX_FNAME_SIZE]) {
+  struct stat st1;
+  struct stat st2;
+  stat(array1, &st1);
+  stat(array2, &st2);
+  return ( st1.st_size >= st2.st_size);
+}
+
+int main( int argc, char * argv[]) {
   // handle command line arguments
-  if(argc != 1) {
-    fprintf(stderr, "I don't take command line arguments.\n");
+  if(argc != 3) {
+    fprintf(stderr, "Usage: scan <file extension> <# of files>\n");
     exit(-1);
   }
   // open 'find...'
-  FILE * fp = popen( "find . -type f", "r");
+  FILE * fp = popen( "./myFind", "r");
   if( fp == NULL) {
     perror("popen failed:");
     exit(-1);
@@ -36,14 +46,37 @@ int main( int argc, char ** argv) {
   char buff[MAX_FNAME_SIZE];
   int nFiles = 0;
   char * files[MAX_FILES];
+
+  char extension[MAX_FNAME_SIZE];
+
+  strcpy(extension, ".");
+  strcat(extension, argv[1]);
+  strcat(extension, "\n");
+  
   while(fgets(buff,MAX_FNAME_SIZE,fp)) {
     int len = strlen(buff) - 1;
+
+    const char ch = '.';
+    char *toCheck;
+    
+    toCheck = strrchr(buff, ch); // contains: .<extension>\n
+
+    int comp;
+    if ((comp = strcmp(extension, toCheck)) == 0) {
     files[nFiles] = strndup(buff,len);
     nFiles ++;
+    if (nFiles >= atoi(argv[2])) break;
+    }
   }
+
+  //sort array by size; large to small;
+
   fclose(fp);
-  printf("Found %d files:\n", nFiles);
+  //printf("Found %d files:\n", nFiles);
   // get file sizes for each file and sum them up
+  std::sort(files, files+nFiles, compareSize);
+
+
   long long totalSize = 0;
   struct stat st;
   for(int i = 0 ; i < nFiles ; i ++ ) {
@@ -52,9 +85,9 @@ int main( int argc, char ** argv) {
       exit(-1);
     }
     totalSize += st.st_size;
-    printf("\t%s : %ld\n", files[i], st.st_size);
+    printf("%s %ld\n", files[i], st.st_size);
   }
-  printf("Total size: %lld bytes.\n", totalSize);
+  printf("Total size: %lld\n", totalSize);
   // clean up
   for(int i = 0; i < nFiles ; i ++ ) {
     free(files[i]);
