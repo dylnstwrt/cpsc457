@@ -8,6 +8,7 @@
  * Question:    Q2
  *
  * File name: myFind.cpp
+ * Compile with: g++ myFind.cpp -o myFind
  *********************************************/
 
 #include <stdio.h>

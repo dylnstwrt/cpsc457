@@ -8,6 +8,7 @@
  * Question:    Q3
  *
  * File name: scan.cpp
+ * Compile with: g++ scan.cpp -o scan
  *********************************************/
 
 #include <stdio.h>
@@ -22,6 +23,8 @@
 #define MAX_FNAME_SIZE 512
 #define MAX_FILES 1024
 
+// comparator for sort(), uses name to find file size
+// and sort in descending order
 bool compareSize( char array1[MAX_FNAME_SIZE], char array2[MAX_FNAME_SIZE]) {
   struct stat st1;
   struct stat st2;
@@ -49,6 +52,8 @@ int main( int argc, char * argv[]) {
 
   char extension[MAX_FNAME_SIZE];
 
+  // init cstring with convention of: .<extension>\n
+  // used for matching files with the same extension
   strcpy(extension, ".");
   strcat(extension, argv[1]);
   strcat(extension, "\n");
@@ -59,21 +64,22 @@ int main( int argc, char * argv[]) {
     const char ch = '.';
     char *toCheck;
     
-    toCheck = strrchr(buff, ch); // contains: .<extension>\n
+    // get .<extension>\n of the file in the directory
+    toCheck = strrchr(buff, ch);
 
     int comp;
+    // if extension matches, add file to array; iterate file count
+    // break if number of files in array is equal to the number passed. 
     if ((comp = strcmp(extension, toCheck)) == 0) {
-    files[nFiles] = strndup(buff,len);
-    nFiles ++;
+      files[nFiles] = strndup(buff,len);
+      nFiles ++;
     if (nFiles >= atoi(argv[2])) break;
     }
   }
 
-  //sort array by size; large to small;
-
   fclose(fp);
-  //printf("Found %d files:\n", nFiles);
-  // get file sizes for each file and sum them up
+
+  //sort array by size; large to small;
   std::sort(files, files+nFiles, compareSize);
 
 
@@ -84,6 +90,7 @@ int main( int argc, char * argv[]) {
       perror("stat failed:");
       exit(-1);
     }
+    // update totalsize with each files size, print out file name and file size
     totalSize += st.st_size;
     printf("%s %ld\n", files[i], st.st_size);
   }
