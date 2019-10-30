@@ -1,0 +1,14 @@
+easy
+    - all cases pass 
+medium
+    -fail: 3(21),8(21),16(20)
+hard
+    - all cases pass
+hard2
+    - all cases pass
+
+expected:
+    easy: 7
+    medium: 19
+    hard: 5
+    hard2: 4
