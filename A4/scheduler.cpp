@@ -12,12 +12,15 @@
 #include <iostream>
 #include <string>
 #include <queue>
+#include <deque>
 #include <vector>
 #include <fstream>
 #include <bits/stdc++.h>
 
 using namespace std;
 
+// comparator for priority queue in SJF for insertion of elements depending
+// on remaining burst size. 
 struct burstCompare
 {
     bool operator()(pair<int, int> lhs, pair<int, int> rhs)
@@ -58,7 +61,6 @@ void SJF(vector<int> arrivals, vector<int> bursts)
         }
 
         // if processes in queue, execute them
-
         if (!waiting.empty())
         {
             pair<int, int> toExecute(waiting.top());
@@ -115,10 +117,10 @@ void RR(vector<int> arrivals, vector<int> bursts, int quantum)
 {
     int time = 0;
     int succCount = 0;
-    vector<int> completed;
+    vector<int> completed (0);
     vector<int> timeWaiting(arrivals.size(), 0);
     int processCount = arrivals.size();
-    queue<pair<int, int>> waiting;
+    deque<pair<int, int>> waiting;
 
     cout << "Time ";
     for (int i = 0; i < processCount; i++)
@@ -128,7 +130,54 @@ void RR(vector<int> arrivals, vector<int> bursts, int quantum)
     cout << endl
          << "------------------------------------------------------------" << endl;
 
-    
+    while (true)
+    {
+        cout << right << setw(3) << time << "  ";
+         for (int i = 0; i < processCount; i++)
+        {
+            if (arrivals.at(i) == time)
+            {
+                // pair: PID, remaining bursts
+                pair<int, int> toPush(i, bursts.at(i));
+                waiting.push_back(toPush);
+            }
+        }
+
+        if (!waiting.empty()) 
+        {
+            pair<int,int> toExecute(waiting.front());
+            waiting.pop_front();
+
+            for (int i = 0; i < processCount; i++) {
+                bool complete = (find(completed.begin(), completed.end(), i) != completed.end());
+                if (i == toExecute.first) {
+                    cout << right << setw(2) << "#";
+                    toExecute.second--;
+                    succCount++;
+                } else if ((arrivals.at(i) <= time) && (!complete)) {
+                    cout << right << setw(2) << ".";
+                    timeWaiting.at(i)++;
+                } else {
+                    cout << right << setw(2) << " ";
+                }
+                cout << " ";
+            }
+
+            if(toExecute.second == 0) {
+                succCount = 0;
+                completed.push_back(toExecute.first);
+            } else if (succCount == quantum) {
+                waiting.push_back(toExecute);
+                succCount = 0;
+            } else {
+                waiting.push_front(toExecute);
+            }
+        }
+        cout << endl;
+        if (completed.size() == processCount)
+            break;
+        time+=1;
+    }
 
     cout << "------------------------------------------------------------" << endl;
     double avg = 0;
