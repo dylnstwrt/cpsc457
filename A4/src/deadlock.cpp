@@ -8,6 +8,7 @@
  * Question:    Q6
  *
  * File name: deadlock.cpp
+ * compile with g++ -O2 -deadlock.cpp -o deadlock
  *********************************************/
 
 #include <iostream>
@@ -28,7 +29,8 @@ void getMembers(std::string, std::string&, std::string&);
 
 /**
  * @brief nested while loops to check for user inputs, inner loop breaks on 
- * detection of both "#" or EOF, outer loop only breaks on EOF.
+ * detection of both "#" or EOF, outer loop only breaks on EOF, indicating that
+ * user is done with input.
  * 
  * @param argc 
  * @param argv 
@@ -45,14 +47,14 @@ int main (int argc, char* argv[]) {
 
         bool reading = true;
         std::string line;
-        std::unordered_map<std::string, std::pair<bool, std::vector<int>>> graph;
+        std::unordered_map<std::string, std::pair<bool, std::vector<int>>> graph; // might need to tweak for optimization
 
         while(reading)
         {   
 
             std::getline(std::cin, line);
 
-            if (isEOS(line) || (std::cin.eof()))
+            if (isEOS(line) || (std::cin.eof())) //EOF = Ctrl+D in UNIX
             {
                 running = !(std::cin.eof());
                 break;
@@ -75,6 +77,9 @@ int main (int argc, char* argv[]) {
             }
 
         }
+
+        // deconstruct graph, check each process for presence of cycle
+        // use a toposort?
 
     }
 
