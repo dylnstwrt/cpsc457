@@ -15,7 +15,12 @@
 #include <deque>
 #include <vector>
 #include <fstream>
+#include <algorithm>
+#include <iomanip>
+
+/* 
 #include <bits/stdc++.h>
+ */
 
 using namespace std;
 
