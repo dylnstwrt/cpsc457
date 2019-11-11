@@ -13,8 +13,9 @@
 
 #include <iostream>
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
+#include <stack>
 
 #define REQUEST " -> "
 #define ASSIGN " <- "
@@ -49,7 +50,9 @@ int main (int argc, char* argv[]) {
         int processCount = 0;
 
         std::string line;
-        std::unordered_map<std::string, std::pair<int, std::vector<std::string>>> graph; // might need to tweak for optimization
+        //note: a lack of an element in either of the maps implies that it is a deadend/terminal node
+        std::map<std::string, std::pair<int, std::vector<std::string>>> processes;
+        std::map<std::string, std::pair<int, std::vector<std::string>>> resources;
         std::vector<int> deadlockedProcesses;
 
         while(reading)
@@ -70,40 +73,45 @@ int main (int argc, char* argv[]) {
             
             if(isRequest(line)) // -> 
             {
-                if (graph.find(process) == graph.end()) // process doesn't exist
+                if (processes.find(process) == processes.end()) // process doesn't exist
                 {
-                    graph.emplace(process, std::pair<int, std::vector<std::string>> 
+                    processes.emplace(process, std::pair<int, std::vector<std::string>> 
                         {1, std::vector<std::string> {resource}});
-                        processCount++;
                 } else {                                // process already exists
-                    
+                    std::pair<int, std::vector<std::string>> toUpdate = processes[process];
+                    toUpdate.first++;
+                    toUpdate.second.push_back(resource);
+                    processes[process] = toUpdate;
                 }
             }
 
 
             else if(isAssignment(line)) // <-
             {
-                if (graph.find(resource) == graph.end())
+                if (resources.find(resource) == resources.end()) // resource doesn't exist
                 {
-                    graph.emplace(resource, std::pair<int, std::vector<std::string>>
+                    resources.emplace(resource, std::pair<int, std::vector<std::string>>
                         {1, std::vector<std::string>{process}});
                 } else {
-                   
+                   std::pair<int, std::vector<std::string>> toUpdate = resources[resource];
+                   toUpdate.first++;
+                   toUpdate.second.push_back(process);
+                   resources[resource] = toUpdate;
                 }
             }
-
         }
 
-        // deconstruct graph, check each process for presence of cycle
-        // use a toposort?
+        for (auto it=processes.begin(); it!=processes.end(); it++) {
+            // check each process for presence of a cycle
+        }    
 
-        std::cout << "Deadlocked Processes: ";
+        std::cout << "Deadlocked processes: ";
         if (!(deadlockedProcesses.size() == 0)) {
             for (int i = 0; i < deadlockedProcesses.size(); i++)
                 {std::cout << deadlockedProcesses.at(i);}
             std::cout << "\n";
         } else {
-            std::cout << "None" << "\n";
+            std::cout << "none" << "\n";
         }
     }
 
