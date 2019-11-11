@@ -39,15 +39,18 @@ void getMembers(std::string, std::string&, std::string&);
 int main (int argc, char* argv[]) {
 
     if (argc != 1) {
-        std::cerr << "No args required, Aborting..." << std::endl;
+        std::cerr << "No args required, Aborting..." << "";
         exit(EXIT_FAILURE);
     }
 
     while(running) {
 
         bool reading = true;
+        int processCount = 0;
+
         std::string line;
-        std::unordered_map<std::string, std::pair<bool, std::vector<int>>> graph; // might need to tweak for optimization
+        std::unordered_map<std::string, std::pair<int, std::vector<std::string>>> graph; // might need to tweak for optimization
+        std::vector<int> deadlockedProcesses;
 
         while(reading)
         {   
@@ -65,15 +68,28 @@ int main (int argc, char* argv[]) {
 
             getMembers(line, process, resource);
             
-            if(isRequest(line))
+            if(isRequest(line)) // -> 
             {
-                
+                if (graph.find(process) == graph.end()) // process doesn't exist
+                {
+                    graph.emplace(process, std::pair<int, std::vector<std::string>> 
+                        {1, std::vector<std::string> {resource}});
+                        processCount++;
+                } else {                                // process already exists
+                    
+                }
             }
 
 
-            else if(isAssignment(line)) 
+            else if(isAssignment(line)) // <-
             {
-                
+                if (graph.find(resource) == graph.end())
+                {
+                    graph.emplace(resource, std::pair<int, std::vector<std::string>>
+                        {1, std::vector<std::string>{process}});
+                } else {
+                   
+                }
             }
 
         }
@@ -81,6 +97,14 @@ int main (int argc, char* argv[]) {
         // deconstruct graph, check each process for presence of cycle
         // use a toposort?
 
+        std::cout << "Deadlocked Processes: ";
+        if (!(deadlockedProcesses.size() == 0)) {
+            for (int i = 0; i < deadlockedProcesses.size(); i++)
+                {std::cout << deadlockedProcesses.at(i);}
+            std::cout << "\n";
+        } else {
+            std::cout << "None" << "\n";
+        }
     }
 
 }
@@ -142,5 +166,5 @@ void getMembers(std::string line, std::string &process, std::string &resource)
     process = "P" + line.substr(0, pos);
     resource = "R" + line.substr(pos+delim.length());
 
-    std::cout << process << " : " << resource << std::endl;
+    /* std::cout << process << " : " << resource << "\n"; */
 }
