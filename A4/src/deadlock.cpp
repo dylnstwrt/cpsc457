@@ -13,9 +13,11 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <map>
 #include <vector>
 #include <stack>
+#include <algorithm>
 
 #define REQUEST " -> "
 #define ASSIGN " <- "
@@ -51,9 +53,8 @@ int main (int argc, char* argv[]) {
 
         std::string line;
         //note: a lack of an element in either of the maps implies that it is a deadend/terminal node
-        std::map<std::string, std::pair<int, std::vector<std::string>>> processes;
-        std::map<std::string, std::pair<int, std::vector<std::string>>> resources;
-        std::vector<int> deadlockedProcesses;
+        std::map<std::string, std::vector<std::string>> graph; // key = node, map = inward edges
+        std::vector<int> deadlockedProcesses; // for reading out
 
         while(reading)
         {   
@@ -73,45 +74,70 @@ int main (int argc, char* argv[]) {
             
             if(isRequest(line)) // -> 
             {
-                if (processes.find(process) == processes.end()) // process doesn't exist
+                if (graph.count(resource) == 0)
                 {
-                    processes.emplace(process, std::pair<int, std::vector<std::string>> 
-                        {1, std::vector<std::string> {resource}});
-                } else {                                // process already exists
-                    std::pair<int, std::vector<std::string>> toUpdate = processes[process];
-                    toUpdate.first++;
-                    toUpdate.second.push_back(resource);
-                    processes[process] = toUpdate;
+                    graph.emplace(resource, std::vector<std::string>{process});
+                } else {                                
+                   graph[resource].emplace_back(process);
                 }
             }
 
 
             else if(isAssignment(line)) // <-
             {
-                if (resources.find(resource) == resources.end()) // resource doesn't exist
+                if (graph.count(process) == 0) 
                 {
-                    resources.emplace(resource, std::pair<int, std::vector<std::string>>
-                        {1, std::vector<std::string>{process}});
+                    graph.emplace(process, std::vector<std::string>{resource});
                 } else {
-                   std::pair<int, std::vector<std::string>> toUpdate = resources[resource];
-                   toUpdate.first++;
-                   toUpdate.second.push_back(process);
-                   resources[resource] = toUpdate;
+                    graph[process].emplace_back(resource);
                 }
             }
         }
+        
+        for (auto it = graph.begin(); it != graph.end(); it++) {
+            for (int i = 0; i < it->second.size(); i++) {
+                if (graph.count(it->second[i]) == 0) {
+                    it->second.erase(it->second.begin() + i);
+                }
+            }
+        }
+        
+        while(!graph.empty()){
+            bool leafFound = false;
+            
+            for (auto it = graph.begin(); it != graph.end(); it++) {
+                if (it->second.empty()) {
+                    graph.erase(it->first);
+                    leafFound = true;
+                    break;
+                }
+            }
+            
+            if (!leafFound) break;    
 
-        for (auto it=processes.begin(); it!=processes.end(); it++) {
-            // check each process for presence of a cycle
-        }    
+            for (auto itt = graph.begin(); itt != graph.end(); itt++) {
+                for (int i = 0; i < itt->second.size(); i++){
+                    if (graph.count(itt->second[i]) < 1){
+                        itt->second.erase(itt->second.begin() + i);
+                    }
+                }
+            }
+        
+        }
+        
+          for (auto it = graph.begin(); it != graph.end(); it++) {
+            if (it->first.at(0) == 'P') deadlockedProcesses.emplace_back(stoi(it->first.substr(1)));
+        } 
+        
+        std::sort(deadlockedProcesses.begin(), deadlockedProcesses.end());
 
-        std::cout << "Deadlocked processes: ";
+        std::cout << "Deadlocked processes:";
         if (!(deadlockedProcesses.size() == 0)) {
             for (int i = 0; i < deadlockedProcesses.size(); i++)
-                {std::cout << deadlockedProcesses.at(i);}
+                {std::cout << " " << deadlockedProcesses.at(i);}
             std::cout << "\n";
         } else {
-            std::cout << "none" << "\n";
+            std::cout << " none" << "\n";
         }
     }
 
@@ -119,7 +145,7 @@ int main (int argc, char* argv[]) {
 
 /**
  * @brief checks for presence of substring " -> " indicating a 
- * resource request edge
+ * resource assignment edge
  * 
  * @param line 
  * @return true 
@@ -133,7 +159,7 @@ bool isAssignment(std::string line)
 
 /**
  * @brief checks for presence of substring " <- " indicating a resource
- * allocation edge
+ * request edge
  * 
  * @param line line from standard input
  * @return true 
