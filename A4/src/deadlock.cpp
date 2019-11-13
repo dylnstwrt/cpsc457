@@ -9,6 +9,7 @@
  *
  * File name: deadlock.cpp
  * compile with g++ -O2 -deadlock.cpp -o deadlock
+ * Notes: slows down on larger states (i.e. states 7 & 8 in deadlock-input.txt)
  *********************************************/
 
 #include <iostream>
