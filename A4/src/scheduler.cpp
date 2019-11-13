@@ -8,6 +8,7 @@
  * Question:    Q4
  *
  * File name: Scheduler.cpp
+ * Compile with: g++ -O2 scheduler.cpp -o scheduler
  *********************************************/
 #include <iostream>
 #include <string>
