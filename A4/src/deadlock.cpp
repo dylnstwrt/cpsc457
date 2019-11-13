@@ -53,6 +53,7 @@ int main (int argc, char* argv[]) {
 
         std::string line;
         //note: a lack of an element in either of the maps implies that it is a deadend/terminal node
+        // TODO Change to outgoing list not incoming.
         std::map<std::string, std::vector<std::string>> graph; // key = node, map = inward edges
         std::vector<int> deadlockedProcesses; // for reading out
 
@@ -74,26 +75,27 @@ int main (int argc, char* argv[]) {
             
             if(isRequest(line)) // -> 
             {
-                if (graph.count(resource) == 0)
+                if (graph.count(process) == 0)
                 {
-                    graph.emplace(resource, std::vector<std::string>{process});
+                    graph.emplace(process, std::vector<std::string>{resource});
                 } else {                                
-                   graph[resource].emplace_back(process);
+                   graph[process].emplace_back(resource);
                 }
             }
 
 
             else if(isAssignment(line)) // <-
             {
-                if (graph.count(process) == 0) 
+                if (graph.count(resource) == 0) 
                 {
-                    graph.emplace(process, std::vector<std::string>{resource});
+                    graph.emplace(resource, std::vector<std::string>{process});
                 } else {
-                    graph[process].emplace_back(resource);
+                    graph[resource].emplace_back(process);
                 }
             }
         }
         
+        // issue is here; doens't update graph since the 
         for (auto it = graph.begin(); it != graph.end(); it++) {
             for (int i = 0; i < it->second.size(); i++) {
                 if (graph.count(it->second[i]) == 0) {
@@ -124,6 +126,8 @@ int main (int argc, char* argv[]) {
             }
         
         }
+        
+        
         
           for (auto it = graph.begin(); it != graph.end(); it++) {
             if (it->first.at(0) == 'P') deadlockedProcesses.emplace_back(stoi(it->first.substr(1)));
