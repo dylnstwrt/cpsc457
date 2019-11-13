@@ -54,7 +54,7 @@ int main (int argc, char* argv[]) {
         std::string line;
         //note: a lack of an element in either of the maps implies that it is a deadend/terminal node
         // TODO Change to outgoing list not incoming.
-        std::map<std::string, std::vector<std::string>> graph; // key = node, map = inward edges
+        std::map<std::string, std::vector<std::string>> graph; // key = node, map = outgoing edges
         std::vector<int> deadlockedProcesses; // for reading out
 
         while(reading)
@@ -95,7 +95,6 @@ int main (int argc, char* argv[]) {
             }
         }
         
-        // issue is here; doens't update graph since the 
         for (auto it = graph.begin(); it != graph.end(); it++) {
             for (int i = 0; i < it->second.size(); i++) {
                 if (graph.count(it->second[i]) == 0) {
@@ -105,26 +104,30 @@ int main (int argc, char* argv[]) {
         }
         
         while(!graph.empty()){
-            bool leafFound = false;
+            bool leafFound = true;
             
-            for (auto it = graph.begin(); it != graph.end(); it++) {
-                if (it->second.empty()) {
-                    graph.erase(it->first);
-                    leafFound = true;
-                    break;
+            while (leafFound) { // prune entries with empty lists until no more
+                leafFound = false;
+                for (auto it = graph.begin(); it != graph.end(); it++) {
+                    if (it->second.empty()) {
+                        graph.erase(it->first);
+                        leafFound = true;
+                        break;
+                    }
                 }
             }
             
-            if (!leafFound) break;    
+            bool graphUpdated = false;
 
             for (auto itt = graph.begin(); itt != graph.end(); itt++) {
                 for (int i = 0; i < itt->second.size(); i++){
                     if (graph.count(itt->second[i]) < 1){
                         itt->second.erase(itt->second.begin() + i);
+                        graphUpdated = true;
                     }
                 }
             }
-        
+            if (!graphUpdated) break;
         }
         
         
