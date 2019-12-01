@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <iostream>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -23,56 +22,92 @@ int main(int argc, char *argv[])
         exit(-1);
     }
     
-    bool reading = true;
+    //bool reading = true;
     int frames = atoi(argv[1]); 
 
-    while (reading)
-    {
+   /*  while (reading)
+    { */
         std::vector<int> reference;
         int pagenum;
 
         while(true)
         {
-            if (std::scanf("%ld", &pagenum) != 1) break;
+            if (std::scanf("%d", &pagenum) != 1) break;
             reference.push_back(pagenum);
         }
 
         std::cout << optimal(frames, reference) << "\n";
-    }
+    //}
     return(0);
 }
 
 std::string optimal(int maxFrames, std::vector<int> reference)
 {   
+    std::string toWrite;
+    std::vector<int> frames(maxFrames, -1);
     int faults = 0;
-    std::set<int> frames;
-    for (int i = 0; i < reference.size(); i++)
+    
+    while(!reference.empty())
     {
-        int toInsert = reference[i];
-        if ((frames.size() < maxFrames) || (frames.find(toInsert) != frames.end()))
+        int toInsert = reference[0];
+        
+        if (std::find(frames.begin(), frames.end(), toInsert) != frames.end())
         {
-           auto checkPair = frames.insert(toInsert);
-           if (checkPair.second) ++faults;
+            reference.erase(reference.begin());
+            continue;
         }
         else
-        {
-            /* look ahead in reference*/
-            std::vector<int> pages;
-            for (auto x : frames) pages.push_back(x);
-            while (pages.size() != 1)
+        {   
+            int indexToReplace = -1;
+            int distance = -1;
+            
+            for (int i = 0; i < frames.size(); i++)
             {
-                
-                // what if two frames are no longer referenced? iterator will equal end(); break tie how?
-                auto iterator = std::find_first_of(reference.begin()+i, reference.end(), pages.begin(), pages.end());
-                auto index = std::distance(reference.begin(), iterator);
-
-                pages.erase(std::find(pages.begin(), pages.end(), reference[index]));
-
+                if (frames[i] == -1)
+                {
+                    indexToReplace = i;
+                    break;
+                }
             }
-            int toRemove = pages[0];
-            frames.erase(toRemove);
-            frames.emplace(toInsert);
+            
+            if(indexToReplace == -1)
+            {
+                for (int i = 0; i < frames.size(); i++)
+                {
+                    if (std::find(reference.begin(), reference.end(), frames[i]) == reference.end())
+                    {
+                        indexToReplace = i;
+                        break;
+                    }
+                }
+            }
+            
+            if(indexToReplace == -1)
+            {
+                for (int i = 0; i < frames.size(); i++)
+                {
+                    auto iter = std::find(reference.begin(), reference.end(), frames[i]);
+                    auto dist = std::distance(reference.begin(), iter);
+                    
+                    if (dist > distance)
+                    {
+                        distance = dist;
+                        indexToReplace = i;
+                    }
+                }
+            }
+            
+            frames[indexToReplace] = toInsert;
+            reference.erase(reference.begin());
             ++faults;
         }
     }
+    
+    toWrite += "Optimal:\n\t- frames:";
+    for (auto page : frames)
+    {
+        toWrite += " " + std::to_string(page);
+    }
+    toWrite += "\n\t- page faults: " + std::to_string(faults);
+    return toWrite;
 }
