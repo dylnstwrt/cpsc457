@@ -11,7 +11,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <stack>
+#include <deque>
 
 std::string optimal(int, std::vector<int>);
 std::string lru(int, std::vector<int>);
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 }
 
 /**
- * @brief 
+ * @brief implemnetation of optimal algorithm.
  * 
  * @param maxFrames 
  * @param reference 
@@ -129,7 +129,7 @@ std::string optimal(int maxFrames, std::vector<int> reference)
 }
 
 /**
- * @brief TODO counter based version of the lru implementation.
+ * @brief  stack based version of the lru implementation.
  * 
  * @param maxFrames 
  * @param reference 
@@ -196,44 +196,47 @@ std::string lru(int maxFrames, std::vector<int> reference)
     return toWrite;
 }
 
+/**
+ * @brief single reference bit implementation of a clock page 
+ * replacement algorithm
+ * 
+ * @param maxFrames 
+ * @param reference 
+ * @return std::string 
+ */
 std::string clockAlg(int maxFrames, std::vector<int> reference)
 {
     std::string toWrite;
     std::vector<int> frames(maxFrames, -1);
+    std::vector<bool> refs(maxFrames, false);
+    int hand = 0;
     int faults = 0;
     
-    while(!reference.empty())
+    for (auto toInsert : reference)
     {
-        int toInsert = reference[0];
-        
-        if (std::find(frames.begin(), frames.end(), toInsert) != frames.end())
+        auto iter = std::find(frames.begin(), frames.end(), toInsert);
+        if(iter != frames.end())
         {
-            reference.erase(reference.begin());
+            auto index = std::distance(frames.begin(), iter);
+            refs[index] = true;
             continue;
         }
         else
-        {   
-            int indexToReplace = -1;
-            
-            for (int i = 0; i < frames.size(); i++)
+        {
+            while(refs[hand] == true)
             {
-                if (frames[i] == -1)
-                {
-                    indexToReplace = i;
-                    break;
-                }
+                refs[hand] = false;
+                hand = (hand + 1) % maxFrames;
             }
-            
-            
-            
-            
-            frames[indexToReplace] = toInsert;
-            reference.erase(reference.begin());
-            ++faults;
+            frames[hand] = toInsert;
+            refs[hand] = true;
+            hand = (hand + 1) % maxFrames;
+            faults++;
         }
+        
     }
     
-    toWrite += "\nOptimal:\n\t- frames:";
+    toWrite += "\nClock:\n\t- frames:";
     for (auto page : frames)
     {
         toWrite += " " + std::to_string(page);
