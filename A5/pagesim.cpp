@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
         std::cout << optimal(frames, reference);
         std::cout << lru(frames, reference);
-        std::cout << clockAlg(frames,reference);
+        std::cout << clockAlg(frames,reference) << "\n";
     //}
     return(0);
 }
@@ -139,22 +139,27 @@ std::string lru(int maxFrames, std::vector<int> reference)
 {
     std::string toWrite;
     std::vector<int> frames(maxFrames, -1);
-    std::stack<int> pagesUsed;
+    std::deque<int>  leastUsed;
     int faults = 0;
     
     while(!reference.empty())
     {
         int toInsert = reference[0];
         
+        /* already exists in frames*/
         if (std::find(frames.begin(), frames.end(), toInsert) != frames.end())
         {
             reference.erase(reference.begin());
+            auto toRemove = std::find(leastUsed.begin(), leastUsed.end(), toInsert);
+            leastUsed.erase(toRemove);
+            leastUsed.push_back(toInsert);
             continue;
         }
         else
         {   
             int indexToReplace = -1;
             
+            /*has empty frame*/
             for (int i = 0; i < frames.size(); i++)
             {
                 if (frames[i] == -1)
@@ -164,18 +169,25 @@ std::string lru(int maxFrames, std::vector<int> reference)
                 }
             }
             
+            /* pop stack for page to replace in frames*/
             if (indexToReplace == -1)
             {
+                auto page = leastUsed.front();
+                leastUsed.pop_front();
+                
+                auto iter = std::find(frames.begin(), frames.end(), page);
+                indexToReplace = std::distance(frames.begin(), iter);
                 
             }
             
+            leastUsed.push_back(toInsert);
             frames[indexToReplace] = toInsert;
             reference.erase(reference.begin());
             ++faults;
         }
     }
     
-    toWrite += "\nOptimal:\n\t- frames:";
+    toWrite += "\nLRU:\n\t- frames:";
     for (auto page : frames)
     {
         toWrite += " " + std::to_string(page);
