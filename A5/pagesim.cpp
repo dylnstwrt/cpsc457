@@ -103,7 +103,7 @@ std::string optimal(int maxFrames, std::vector<int> reference)
         }
     }
     
-    toWrite += "Optimal:\n\t- frames:";
+    toWrite += "\nOptimal:\n\t- frames:";
     for (auto page : frames)
     {
         toWrite += " " + std::to_string(page);
