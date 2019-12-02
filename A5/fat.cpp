@@ -27,7 +27,7 @@ struct DEntry {
     bool tooManyBlocks = true;
     bool tooFewBlocks = false;
     bool hasCycle = true;
-    bool sharesBlocks = true;
+    bool sharesBlocks = false;
 };
 
 static SS join( const VS & toks, const SS & sep) {
@@ -37,7 +37,7 @@ static SS join( const VS & toks, const SS & sep) {
     return res;
 }
 
-void checkBlockAndCycle(int blockSize, DEntry & file, std::vector<int> & fat, std::unordered_set<int> & visited)
+void checkBlockAndCycle(int blockSize, DEntry & file, std::vector<int> & fat, std::unordered_multiset<int> & visited)
 {
     int index = file.ind;
     int blocksUsed = 0;
@@ -50,6 +50,8 @@ void checkBlockAndCycle(int blockSize, DEntry & file, std::vector<int> & fat, st
     {
         blocksUsed += 1;
         cycleDetect.insert(index);
+        auto pair = visited.insert(index);
+        if (visited.count(index) > 1) file.sharesBlocks = true;
         index = fat[index];
     }
 
@@ -75,6 +77,26 @@ void checkBlockAndCycle(int blockSize, DEntry & file, std::vector<int> & fat, st
     
 }
 
+void checkShared(DEntry & file, std::vector<int> & fat, std::unordered_multiset<int> & visited)
+{
+    std::unordered_set<int> cycleDetect;
+    int index = file.ind;
+    while ((index != -1) && (cycleDetect.find(index) == cycleDetect.end()))
+    {
+        if (visited.count(index) > 1)
+        {
+            file.sharesBlocks = true;
+            break;
+        }
+        else
+        {
+            cycleDetect.insert(index);
+            index = fat[index];
+        }
+        
+    }
+}
+
 // re-implement this function
 //
 // Parameters:
@@ -87,10 +109,15 @@ void checkBlockAndCycle(int blockSize, DEntry & file, std::vector<int> & fat, st
 //      i.e. tooManyBlocks, tooFewBlocks, hasCycle and sharesBlocks
 int checkConsistency( int blockSize, std::vector<DEntry> & files, std::vector<int> & fat)
 {    
-    std::unordered_set<int> visitedIndices;
+    std::unordered_multiset<int> visitedIndices;
     for (auto &file : files)
     {
         checkBlockAndCycle(blockSize, file, fat, visitedIndices);
+    }
+    for (auto &file : files)
+    {
+        if (file.sharesBlocks) continue;
+        checkShared(file, fat, visitedIndices);
     }
     
 
