@@ -13,6 +13,9 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
+#include <cmath>
 
 typedef std::string SS;
 typedef std::vector<SS> VS;
@@ -34,6 +37,44 @@ static SS join( const VS & toks, const SS & sep) {
     return res;
 }
 
+void checkBlockAndCycle(int blockSize, DEntry & file, std::vector<int> & fat, std::unordered_set<int> & visited)
+{
+    int index = file.ind;
+    int blocksUsed = 0;
+    std::unordered_set<int> cycleDetect;
+
+    auto temp = (double)file.size / (double)blockSize;
+    int ceiling = std::ceil(temp);
+
+    while( (index != -1) && (cycleDetect.find(index) == cycleDetect.end()) )
+    {
+        blocksUsed += 1;
+        cycleDetect.insert(index);
+        index = fat[index];
+    }
+
+    auto totalSize = blockSize * blocksUsed;
+
+    if (cycleDetect.find(index) == cycleDetect.end())
+    {
+        file.hasCycle = false;
+    }
+
+    if (totalSize < file.size)
+    {
+        file.tooFewBlocks = true;
+        file.tooManyBlocks = false;
+    }
+    else
+    {
+        if (blocksUsed <= ceiling)
+        {
+            file.tooManyBlocks = false;
+        }
+    }
+    
+}
+
 // re-implement this function
 //
 // Parameters:
@@ -45,33 +86,14 @@ static SS join( const VS & toks, const SS & sep) {
 //   also, for ever entry in the files[] array, you need to set the appropriate flags:
 //      i.e. tooManyBlocks, tooFewBlocks, hasCycle and sharesBlocks
 int checkConsistency( int blockSize, std::vector<DEntry> & files, std::vector<int> & fat)
-{
-    // make the first entry contain no errors
-    if( files.size() > 0) {
-        files[0].hasCycle = false;
-        files[0].tooFewBlocks = false;
-        files[0].tooManyBlocks = false;
-        files[0].sharesBlocks = false;
+{    
+    std::unordered_set<int> visitedIndices;
+    for (auto &file : files)
+    {
+        checkBlockAndCycle(blockSize, file, fat, visitedIndices);
     }
+    
 
-    // make the 2nd entry contain one error
-    if( files.size() > 1) {
-        files[1].hasCycle = true;
-        files[1].tooFewBlocks = false;
-        files[1].tooManyBlocks = false;
-        files[1].sharesBlocks = false;
-    }
-
-    // make the 3rd entry contain two errors
-    if( files.size() > 2) {
-        files[2].hasCycle = false;
-        files[2].tooFewBlocks = false;
-        files[2].tooManyBlocks = true;
-        files[2].sharesBlocks = true;
-    }
-
-    // finally, return the number of free blocks
-    return 0;
 }
 
 int main()
