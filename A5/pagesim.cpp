@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 }
 
 /**
- * @brief implemnetation of optimal algorithm.
+ * @brief implementation of optimal algorithm.
  * 
  * @param maxFrames 
  * @param reference 
