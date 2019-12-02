@@ -1,14 +1,12 @@
-// CPSC457 University of Calgary
-// Skeleton C++ program for Q7 of Assignment 5.
-//
-// The program reads in the input, then calls the (wrongly implemented) checkConsistency()
-// function, and finally formats the output.
-//
-// You only need to reimplement the checkConsistency() function.
-//
-// Author: Pavol Federl (pfederl@ucalgary.ca or federl@gmail.com)
-// Date: April 1, 2019
-// Version: 5
+/**
+ * @file fat.cpp
+ * @author Pavol Federl, Modified by Dylan Stewart (UCID:30024193)
+ * @brief Modified skeleton code for assignment 5, question 7, CPSC457 in Fall 2019.
+ * @date 2019-12-02
+ * 
+ * @copyright Copyright (c) 2019
+ * 
+ */
 
 #include <stdio.h>
 #include <string>
@@ -37,10 +35,11 @@ static SS join( const VS & toks, const SS & sep) {
     return res;
 }
 
-void checkBlockAndCycle(int blockSize, DEntry & file, std::vector<int> & fat, std::unordered_multiset<int> & visited)
+int checkBlockAndCycle(int blockSize, DEntry & file, std::vector<int> & fat, std::unordered_multiset<int> & visited)
 {
     int index = file.ind;
     int blocksUsed = 0;
+    int dupes = 0;
     std::unordered_set<int> cycleDetect;
 
     auto temp = (double)file.size / (double)blockSize;
@@ -50,8 +49,12 @@ void checkBlockAndCycle(int blockSize, DEntry & file, std::vector<int> & fat, st
     {
         blocksUsed += 1;
         cycleDetect.insert(index);
-        auto pair = visited.insert(index);
-        if (visited.count(index) > 1) file.sharesBlocks = true;
+        visited.insert(index);
+        if (visited.count(index) > 1) 
+        {
+            file.sharesBlocks = true;
+            ++dupes;
+        }
         index = fat[index];
     }
 
@@ -74,7 +77,7 @@ void checkBlockAndCycle(int blockSize, DEntry & file, std::vector<int> & fat, st
             file.tooManyBlocks = false;
         }
     }
-    
+    return dupes;
 }
 
 void checkShared(DEntry & file, std::vector<int> & fat, std::unordered_multiset<int> & visited)
@@ -110,17 +113,17 @@ void checkShared(DEntry & file, std::vector<int> & fat, std::unordered_multiset<
 int checkConsistency( int blockSize, std::vector<DEntry> & files, std::vector<int> & fat)
 {    
     std::unordered_multiset<int> visitedIndices;
+    int dupes = 0;
     for (auto &file : files)
     {
-        checkBlockAndCycle(blockSize, file, fat, visitedIndices);
+        dupes += checkBlockAndCycle(blockSize, file, fat, visitedIndices);
     }
     for (auto &file : files)
     {
         if (file.sharesBlocks) continue;
         checkShared(file, fat, visitedIndices);
     }
-    
-
+    return (fat.size() - (visitedIndices.size() - dupes));
 }
 
 int main()
